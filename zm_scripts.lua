@@ -29,11 +29,13 @@ local DefaultConfig = {
 
 Commands = {
 
-    "/Mat - χάος'",
-    "/PD Perm - χάος'",
-    "/Furar Pneu - χάος'",
-    "/Kit - χάος'",
-    "/Pegar"
+    "`/Mat - χάος'",
+    "`/PD Perm - χάος'",
+    "`/Furar Pneu - χάος'",
+    "`/Kit - χάος'",
+    "`/Pegar",
+    "`/000",
+    "`/script by thenkz_0"
 },
 
 AutoPD = {
