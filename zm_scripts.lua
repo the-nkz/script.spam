@@ -733,3 +733,57 @@ Button.InputEnded:Connect(function(input)
 end)
 
 end
+
+--// /0.restart - reset só dos comandos
+
+local function ResetCommands()
+    Config.Commands = {
+        "`/Mat - χάος'",
+        "`/PD Perm - χάος'",
+        "`/Furar Pneu - χάος'",
+        "`/Kit - χάος'",
+        "`/Pegar",
+        "`/000",
+        "`/script by thenkz_0"
+    }
+
+    SaveConfig()
+
+    if Buttons then
+        for i, btn in ipairs(Buttons) do
+            if Config.Commands[i] then
+                btn.Text = Config.Commands[i]
+            end
+        end
+    end
+end
+
+local function processarComando_override(msg)
+    msg = string.lower(msg)
+
+    if msg == "/0.restart" then
+        ResetCommands()
+        return
+    end
+
+    if msg == "/0" then
+        icon.Visible = not icon.Visible
+        if not icon.Visible then
+            panel.Visible = false
+        end
+    end
+end
+
+-- substitui o listener antigo pelo novo
+if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+    local channel = TextChatService.TextChannels:FindFirstChild("RBXGeneral")
+    if channel then
+        channel.MessageReceived:Connect(function(message)
+            if message.TextSource and message.TextSource.UserId == player.UserId then
+                processarComando_override(message.Text)
+            end
+        end)
+    end
+else
+    player.Chatted:Connect(processarComando_override)
+end
