@@ -776,3 +776,166 @@ if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
 else
     player.Chatted:Connect(processarComando_override)
 end
+--// ESP
+
+local ESPEnabled = false
+local ESPObjects = {}
+
+local camera = workspace.CurrentCamera
+
+local function RemoveESP(targetPlayer)
+	if ESPObjects[targetPlayer] then
+		if ESPObjects[targetPlayer].Billboard then
+			ESPObjects[targetPlayer].Billboard:Destroy()
+		end
+		if ESPObjects[targetPlayer].Highlight then
+			ESPObjects[targetPlayer].Highlight:Destroy()
+		end
+		ESPObjects[targetPlayer] = nil
+	end
+end
+
+local function CreateESP(targetPlayer)
+	if targetPlayer == player then return end
+	if ESPObjects[targetPlayer] then return end
+
+	local billboard = Instance.new("BillboardGui")
+	billboard.Name = "ESP_Billboard"
+	billboard.AlwaysOnTop = true
+	billboard.Size = UDim2.new(0, 100, 0, 30)
+	billboard.StudsOffsetWorldSpace = Vector3.new(0, -2.5, 0)
+	billboard.ResetOnSpawn = false
+
+	local nameLabel = Instance.new("TextLabel")
+	nameLabel.Size = UDim2.new(1, 0, 1, 0)
+	nameLabel.BackgroundTransparency = 1
+	nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+	nameLabel.TextStrokeTransparency = 0.4
+	nameLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+	nameLabel.Font = Enum.Font.GothamBold
+	nameLabel.Text = targetPlayer.Name
+	nameLabel.TextScaled = true
+	nameLabel.Parent = billboard
+
+	ESPObjects[targetPlayer] = {
+		Billboard = billboard,
+		NameLabel = nameLabel,
+		Highlight = nil
+	}
+
+	local function AttachToCharacter(char)
+		if not char then return end
+
+		local root = char:WaitForChild("HumanoidRootPart", 5)
+		if not root then return end
+
+		billboard.Adornee = root
+		billboard.Parent = game.CoreGui
+
+		-- Highlight (outline vermelho)
+		if ESPObjects[targetPlayer] and ESPObjects[targetPlayer].Highlight then
+			ESPObjects[targetPlayer].Highlight:Destroy()
+		end
+
+		local highlight = Instance.new("Highlight")
+		highlight.Name = "ESP_Highlight"
+		highlight.Adornee = char
+		highlight.OutlineColor = Color3.fromRGB(255, 0, 0)
+		highlight.OutlineTransparency = 0
+		highlight.FillTransparency = 1
+		highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+		highlight.Parent = char
+
+		if ESPObjects[targetPlayer] then
+			ESPObjects[targetPlayer].Highlight = highlight
+		end
+	end
+
+	AttachToCharacter(targetPlayer.Character)
+	targetPlayer.CharacterAdded:Connect(AttachToCharacter)
+end
+
+local function EnableESP()
+	for _, p in ipairs(Players:GetPlayers()) do
+		if p ~= player then
+			CreateESP(p)
+		end
+	end
+end
+
+local function DisableESP()
+	for _, p in ipairs(Players:GetPlayers()) do
+		RemoveESP(p)
+	end
+end
+
+-- Atualiza tamanho do nome com base na distância
+RunService.RenderStepped:Connect(function()
+	if not ESPEnabled then return end
+
+	local localChar = player.Character
+	local localRoot = localChar and localChar:FindFirstChild("HumanoidRootPart")
+
+	for _, p in ipairs(Players:GetPlayers()) do
+		if p == player then continue end
+
+		local obj = ESPObjects[p]
+		if not obj or not obj.NameLabel then continue end
+
+		local char = p.Character
+		local root = char and char:FindFirstChild("HumanoidRootPart")
+
+		if root and localRoot then
+			local dist = (root.Position - localRoot.Position).Magnitude
+
+			-- Longe = texto grande, perto = texto pequeno
+			-- Distância: 5 (mínimo) até 200+ (máximo)
+			local minSize = 6
+			local maxSize = 16
+			local minDist = 10
+			local maxDist = 150
+
+			local t = math.clamp((dist - minDist) / (maxDist - minDist), 0, 1)
+			local textSize = minSize + (maxSize - minSize) * t
+
+			obj.NameLabel.TextSize = textSize
+			obj.Billboard.Size = UDim2.new(0, 100, 0, textSize + 6)
+		end
+	end
+end)
+
+-- Entrada/saída de jogadores
+Players.PlayerAdded:Connect(function(p)
+	if ESPEnabled then
+		CreateESP(p)
+	end
+end)
+
+Players.PlayerRemoving:Connect(function(p)
+	RemoveESP(p)
+end)
+
+-- Comando /. para ativar/desativar ESP
+local function processarESP(msg)
+	if string.lower(msg) == "/E" then
+		ESPEnabled = not ESPEnabled
+		if ESPEnabled then
+			EnableESP()
+		else
+			DisableESP()
+		end
+	end
+end
+
+if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+	local channel = TextChatService.TextChannels:FindFirstChild("RBXGeneral")
+	if channel then
+		channel.MessageReceived:Connect(function(message)
+			if message.TextSource and message.TextSource.UserId == player.UserId then
+				processarESP(message.Text)
+			end
+		end)
+	end
+else
+	player.Chatted:Connect(processarESP)
+end
