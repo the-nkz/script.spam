@@ -724,10 +724,7 @@ local LockThread = nil
 local function SetIconLocked(locked)
     IconLocked = locked
     icon.Active = not locked
-    icon.BackgroundTransparency = locked and 0.95 or 0.75
-    icon.TextColor3 = locked
-        and Color3.fromRGB(120,120,120)
-        or Color3.fromRGB(255,255,255)
+    
 end
 
 --// COMANDO /0
