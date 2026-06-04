@@ -28,12 +28,12 @@ local DefaultConfig = {
 
 Commands = {
 
-    "`/Mat - 🥷",
-    "`/PD Perm - 🥷",
-    "`/Furar Pneu - 🥷",
-    "`/Kit - 🥷",
-    "`/Render - 🥷",
-    "`/Algemar - 🥷",
+    "`/Mat - ♟️",
+    "`/PD Perm - ♟️",
+    "`/Furar Pneu - ♟️",
+    "`/Kit - ♟️",
+    "`/Render - ♟️",
+    "`/Algemar - ♟️",
     "`/script by thenkz_0"
 },
 
