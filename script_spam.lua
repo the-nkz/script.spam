@@ -457,7 +457,7 @@ Title.Size = UDim2.new(1,0,0,25)
 Title.BackgroundTransparency = 1
 Title.Text = "Editar Comando"
 Title.TextColor3 = Color3.new(1,1,1)
-Title.Font = Enum.Font.GothamBold
+Title.Font = EnumFont.GothamBold
 Title.TextSize = 14
 Title.Parent = EditorFrame
 
@@ -917,7 +917,7 @@ end)
 
 -- Comando /. para ativar/desativar ESP
 local function processarESP(msg)
-	if string.lower(msg) == "/E" then
+	if string.lower(msg) == "/.e" then
 		ESPEnabled = not ESPEnabled
 		if ESPEnabled then
 			EnableESP()
