@@ -909,7 +909,7 @@ end)
 
 -- Comando /. para ativar/desativar ESP
 local function processarESP(msg)
-	if string.lower(msg) == "/.e" then
+	if string.lower(msg) == "!e" then
 		ESPEnabled = not ESPEnabled
 		if ESPEnabled then
 			EnableESP()
@@ -1040,7 +1040,7 @@ local function RemoverAntilag()
 end
 
 local function processarAntilag(msg)
-    if string.lower(msg) == "/.a" then
+    if string.lower(msg) == "!fps" then
         AntilagEnabled = not AntilagEnabled
         if AntilagEnabled then
             AplicarAntilag()
