@@ -931,3 +931,134 @@ if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
 else
 	player.Chatted:Connect(processarESP)
 end
+--// ANTILAG
+
+local AntilagEnabled = false
+local AntilagBackup = {}
+
+local function AplicarAntilag()
+    -- Sombras e fog
+    AntilagBackup.GlobalShadows = workspace.GlobalShadows
+    AntilagBackup.FogEnd = workspace.FogEnd
+    workspace.GlobalShadows = false
+    workspace.FogEnd = 9e9
+
+    -- Qualidade de renderização
+    settings().Rendering.QualityLevel = 1
+
+    -- Lighting
+    local Lighting = game:GetService("Lighting")
+    AntilagBackup.LightingGlobalShadows = Lighting.GlobalShadows
+    AntilagBackup.LightingFogEnd = Lighting.FogEnd
+    AntilagBackup.LightingBrightness = Lighting.Brightness
+    AntilagBackup.LightingClockTime = Lighting.ClockTime
+    Lighting.GlobalShadows = false
+    Lighting.FogEnd = 9e9
+    Lighting.Brightness = 1
+    Lighting.ClockTime = 14
+
+    -- Remove efeitos de lighting (atmosphere, sky, bloom, etc)
+    for _, obj in ipairs(Lighting:GetChildren()) do
+        if obj:IsA("Atmosphere") or obj:IsA("Sky") or obj:IsA("BloomEffect")
+        or obj:IsA("BlurEffect") or obj:IsA("ColorCorrectionEffect")
+        or obj:IsA("SunRaysEffect") or obj:IsA("DepthOfFieldEffect") then
+            AntilagBackup[obj] = obj.Parent
+            obj.Parent = nil
+        end
+    end
+
+    -- Percorrer todos os objetos do workspace
+    for _, obj in ipairs(workspace:GetDescendants()) do
+
+        -- Partículas e efeitos
+        if obj:IsA("ParticleEmitter") or obj:IsA("Smoke") or obj:IsA("Fire")
+        or obj:IsA("Sparkles") or obj:IsA("Trail") then
+            AntilagBackup[obj] = obj.Enabled
+            obj.Enabled = false
+
+        -- Texturas e decals
+        elseif obj:IsA("Texture") or obj:IsA("Decal") then
+            AntilagBackup[obj] = obj.Transparency
+            obj.Transparency = 1
+
+        -- Partes
+        elseif obj:IsA("BasePart") then
+            AntilagBackup[obj] = {
+                CastShadow = obj.CastShadow,
+                Material = obj.Material
+            }
+            obj.CastShadow = false
+            obj.Material = Enum.Material.SmoothPlastic
+
+        -- Luzes
+        elseif obj:IsA("PointLight") or obj:IsA("SpotLight") or obj:IsA("SurfaceLight") then
+            AntilagBackup[obj] = obj.Enabled
+            obj.Enabled = false
+
+        -- Scripts visuais (SpecialMesh mantém, mas remove SurfaceAppearance)
+        elseif obj:IsA("SurfaceAppearance") then
+            AntilagBackup[obj] = obj.Parent
+            obj.Parent = nil
+        end
+    end
+end
+
+local function RemoverAntilag()
+    workspace.GlobalShadows = AntilagBackup.GlobalShadows
+    workspace.FogEnd = AntilagBackup.FogEnd
+    settings().Rendering.QualityLevel = 10
+
+    local Lighting = game:GetService("Lighting")
+    Lighting.GlobalShadows = AntilagBackup.LightingGlobalShadows
+    Lighting.FogEnd = AntilagBackup.LightingFogEnd
+    Lighting.Brightness = AntilagBackup.LightingBrightness
+    Lighting.ClockTime = AntilagBackup.LightingClockTime
+
+    for obj, backup in pairs(AntilagBackup) do
+        if typeof(obj) == "Instance" then
+            pcall(function()
+                if obj:IsA("ParticleEmitter") or obj:IsA("Smoke") or obj:IsA("Fire")
+                or obj:IsA("Sparkles") or obj:IsA("Trail")
+                or obj:IsA("PointLight") or obj:IsA("SpotLight") or obj:IsA("SurfaceLight") then
+                    obj.Enabled = backup
+
+                elseif obj:IsA("Texture") or obj:IsA("Decal") then
+                    obj.Transparency = backup
+
+                elseif obj:IsA("BasePart") then
+                    obj.CastShadow = backup.CastShadow
+                    obj.Material = backup.Material
+
+                elseif typeof(backup) == "Instance" then
+                    obj.Parent = backup
+                end
+            end)
+        end
+    end
+
+    AntilagBackup = {}
+end
+
+local function processarAntilag(msg)
+    if string.lower(msg) == "/.a" then
+        AntilagEnabled = not AntilagEnabled
+        if AntilagEnabled then
+            AplicarAntilag()
+        else
+            RemoverAntilag()
+        end
+    end
+end
+
+if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+    local channel = TextChatService.TextChannels:FindFirstChild("RBXGeneral")
+    if channel then
+        channel.MessageReceived:Connect(function(message)
+            if message.TextSource and message.TextSource.UserId == player.UserId then
+                processarAntilag(message.Text)
+            end
+        end)
+    end
+else
+    player.Chatted:Connect(processarAntilag)
+end
