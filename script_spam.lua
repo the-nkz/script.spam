@@ -695,15 +695,7 @@ end
 --// /0.restart - reset só dos comandos
 
 local function ResetCommands()
-    Config.Commands = {
-        "`/Mat - χάος'",
-        "`/PD Perm - χάος'",
-        "`/Furar Pneu - χάος'",
-        "`/Kit - χάος'",
-        "`/Pegar",
-        "`/000",
-        "`/script by thenkz_0"
-    }
+    Config.Commands = DefaultConfig.Commands
 
     SaveConfig()
 
