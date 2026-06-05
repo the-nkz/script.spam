@@ -1038,7 +1038,6 @@ local function RemoverAntilag()
 
     AntilagBackup = {}
 end
-
 local function processarAntilag(msg)
     if string.lower(msg) == "!fps" then
         AntilagEnabled = not AntilagEnabled
@@ -1050,15 +1049,18 @@ local function processarAntilag(msg)
     end
 end
 
-if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
-    local channel = TextChatService.TextChannels:FindFirstChild("RBXGeneral")
-    if channel then
-        channel.MessageReceived:Connect(function(message)
-            if message.TextSource and message.TextSource.UserId == player.UserId then
-                processarAntilag(message.Text)
-            end
-        end)
+task.spawn(function()
+    task.wait(3)
+    if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+        local channel = TextChatService.TextChannels:WaitForChild("RBXGeneral", 10)
+        if channel then
+            channel.MessageReceived:Connect(function(message)
+                if message.TextSource and message.TextSource.UserId == player.UserId then
+                    processarAntilag(message.Text)
+                end
+            end)
+        end
+    else
+        player.Chatted:Connect(processarAntilag)
     end
-else
-    player.Chatted:Connect(processarAntilag)
-end
+end)
